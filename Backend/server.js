@@ -8,6 +8,7 @@ import { v2 as cloudinary } from "cloudinary";
 import authRoutes from "./routes/auth.route.js";
 import userRoutes from "./routes/user.route.js";
 import postRoutes from "./routes/post.route.js";
+import notificationRoutes from "./routes/notification.route.js";
 dotenv.config();
 
 cloudinary.config({
@@ -24,6 +25,7 @@ app.use(cookieParser()); // to parse cookies
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/posts", postRoutes);
+app.use("/api/notification", notificationRoutes);
 app.listen(3000, () => {
   console.log("Server is running on port 3000");
   connectMongoDB();
