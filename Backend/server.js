@@ -26,7 +26,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/notification", notificationRoutes);
-app.listen(3000, () => {
+app.listen(5000, () => {
   console.log("Server is running on port 3000");
   connectMongoDB();
 });
