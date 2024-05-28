@@ -3,7 +3,7 @@ import User from "../models/user.model.js";
 import { generateTokenAndSetCookie } from "../lib/utils/generateToken.js";
 export const signup = async (req, res) => {
   try {
-    const { fullname, username, email, password } = req.body;
+    const { fullName, username, email, password } = req.body;
 
     //email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -31,7 +31,7 @@ export const signup = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, salt);
 
     const newUser = new User({
-      fullname,
+      fullName,
       username,
       email,
       password: hashedPassword,
@@ -76,7 +76,7 @@ export const login = async (req, res) => {
     res.status(200).json({
       _id: user._id,
       username: user.username,
-      fullname: user.fullname,
+      fullName: user.fullName,
       email: user.email,
       followers: user.followers,
       following: user.following,
