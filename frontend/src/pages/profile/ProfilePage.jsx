@@ -1,6 +1,5 @@
-/* eslint-disable no-unused-vars */
 import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 
 import Posts from "../../components/common/Posts";
 import ProfileHeaderSkeleton from "../../components/skeletons/ProfileHeaderSkeleton";
@@ -12,13 +11,12 @@ import { FaArrowLeft } from "react-icons/fa6";
 import { IoCalendarOutline } from "react-icons/io5";
 import { FaLink } from "react-icons/fa";
 import { MdEdit } from "react-icons/md";
-import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
-import { useParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { formatMemberSinceDate } from "../../utils/date";
-// import { useQuery } from "@tanstack/react-query";
+
 import useFollow from "../../hooks/useFollow";
-// import { on } from "nodemon";
-import toast from "react-hot-toast";
+import useUpdateUserProfile from "../../hooks/useUpdateUserProfile";
+
 const ProfilePage = () => {
   const [coverImg, setCoverImg] = useState(null);
   const [profileImg, setProfileImg] = useState(null);
@@ -27,63 +25,35 @@ const ProfilePage = () => {
   const coverImgRef = useRef(null);
   const profileImgRef = useRef(null);
 
-  // const isLoading = false;
-  const { follow, isPending } = useFollow();
-  const queryClient = useQueryClient();
   const { username } = useParams();
+
+  const { follow, isPending } = useFollow();
   const { data: authUser } = useQuery({ queryKey: ["authUser"] });
 
   const {
     data: user,
     isLoading,
     refetch,
-    isReFetching,
+    isRefetching,
   } = useQuery({
     queryKey: ["userProfile"],
     queryFn: async () => {
       try {
         const res = await fetch(`/api/users/profile/${username}`);
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Something went wrong");
+        if (!res.ok) {
+          throw new Error(data.error || "Something went wrong");
+        }
         return data;
       } catch (error) {
-        throw new Error(error.message);
+        throw new Error(error);
       }
     },
   });
 
-  const { mutate: updateProfile, isPending: isUpdatePending } = useMutation({
-    mutationFn: async () => {
-      try {
-        const res = await fetch(`/api/users/update`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            coverImg,
-            profileImg,
-          }),
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Something went wrong");
-        return data;
-      } catch (error) {
-        throw new Error(error.message);
-      }
-    },
-    onSuccess: () => {
-      toast.success("Profile updated successfully");
-      Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["authUser"] }),
-        queryClient.invalidateQueries({ queryKey: ["userProfile"] }),
-      ]);
-    },
-    onError: (error) => {
-      toast.error(error.message);
-    },
-  });
-  const isMyProfile = authUser?.username === user?.username;
+  const { isUpdatingProfile, updateProfile } = useUpdateUserProfile();
+
+  const isMyProfile = authUser._id === user?._id;
   const memberSinceDate = formatMemberSinceDate(user?.createdAt);
   const amIFollowing = authUser?.following.includes(user?._id);
 
@@ -101,17 +71,18 @@ const ProfilePage = () => {
 
   useEffect(() => {
     refetch();
-  }, [username, refetch, username]);
+  }, [username, refetch]);
+
   return (
     <>
       <div className="flex-[4_4_0]  border-r border-gray-700 min-h-screen ">
         {/* HEADER */}
-        {(isLoading || isReFetching) && <ProfileHeaderSkeleton />}
-        {!isLoading && !isReFetching && !user && (
+        {(isLoading || isRefetching) && <ProfileHeaderSkeleton />}
+        {!isLoading && !isRefetching && !user && (
           <p className="text-center text-lg mt-4">User not found</p>
         )}
         <div className="flex flex-col">
-          {!isLoading && !isReFetching && user && (
+          {!isLoading && !isRefetching && user && (
             <>
               <div className="flex gap-10 px-4 py-2 items-center">
                 <Link to="/">
@@ -142,15 +113,15 @@ const ProfilePage = () => {
 
                 <input
                   type="file"
-                  accept="image/*"
                   hidden
+                  accept="image/*"
                   ref={coverImgRef}
                   onChange={(e) => handleImgChange(e, "coverImg")}
                 />
                 <input
                   type="file"
-                  accept="image/*"
                   hidden
+                  accept="image/*"
                   ref={profileImgRef}
                   onChange={(e) => handleImgChange(e, "profileImg")}
                 />
@@ -190,9 +161,13 @@ const ProfilePage = () => {
                 {(coverImg || profileImg) && (
                   <button
                     className="btn btn-primary rounded-full btn-sm text-white px-4 ml-2"
-                    onClick={() => updateProfile()}
+                    onClick={async () => {
+                      await updateProfile({ coverImg, profileImg });
+                      setProfileImg(null);
+                      setCoverImg(null);
+                    }}
                   >
-                    {isUpdatePending ? "Updating..." : "Update"}
+                    {isUpdatingProfile ? "Updating..." : "Update"}
                   </button>
                 )}
               </div>
@@ -217,7 +192,8 @@ const ProfilePage = () => {
                           rel="noreferrer"
                           className="text-sm text-blue-500 hover:underline"
                         >
-                          youtube.com/@asaprogrammer_
+                          {/* Updated this after recording the video. I forgot to update this while recording, sorry, thx. */}
+                          {user?.link}
                         </a>
                       </>
                     </div>
