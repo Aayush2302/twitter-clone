@@ -1,26 +1,32 @@
 import Notification from "../models/notification.model.js";
-export const getNotification = async (req, res) => {
+
+export const getNotifications = async (req, res) => {
   try {
     const userId = req.user._id;
-    const notification = await Notification.find({ to: userId }).populate({
+
+    const notifications = await Notification.find({ to: userId }).populate({
       path: "from",
       select: "username profileImg",
     });
+
     await Notification.updateMany({ to: userId }, { read: true });
-    res.status(200).json(notification);
+
+    res.status(200).json(notifications);
   } catch (error) {
-    console.log("Error in getNotification controller", error.message);
-    res.status(500).json({ message: "Internal server error" });
+    console.log("Error in getNotifications function", error.message);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 };
 
-export const deleteNotification = async (req, res) => {
+export const deleteNotifications = async (req, res) => {
   try {
     const userId = req.user._id;
+
     await Notification.deleteMany({ to: userId });
-    res.status(200).json({ message: "Notification deleted" });
+
+    res.status(200).json({ message: "Notifications deleted successfully" });
   } catch (error) {
-    console.log("Error in deleteNotification controller", error.message);
-    res.status(500).json({ message: "Internal server error" });
+    console.log("Error in deleteNotifications function", error.message);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 };
