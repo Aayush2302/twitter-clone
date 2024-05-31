@@ -19,7 +19,7 @@ cloudinary.config({
 });
 const app = express();
 const __dirname = path.resolve();
-
+const PORT = process.env.PORT || 5000;
 // middlewares
 app.use(express.json({ limit: "5mb" })); //to parse req.body
 app.use(express.urlencoded({ extended: true })); // to parse form data
@@ -36,7 +36,7 @@ if (process.env.NODE_ENV === "production") {
     res.sendFile(path.resolve(__dirname, "frontend", "dist", "index.html"));
   });
 }
-app.listen(5000, () => {
+app.listen(PORT, () => {
   console.log("Server is running on port 5000");
   connectMongoDB();
 });
